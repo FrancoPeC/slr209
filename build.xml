@@ -1,0 +1,29 @@
+<project name="CycleDetection" basedir="." default="main">
+  <property name="maxPeriod" value="10"/>
+  <property name="inMode" value="0"/>
+  <property name="dataPath" value="Data"/>
+  
+  <property name="src.dir"     value="src"/>
+
+  <property name="build.dir"   value="build"/>
+
+  <target name="clean-build">
+    <delete dir="${build.dir}"/>
+  </target>
+
+  <target name="clean" depends="clean-build"/>
+
+  <target name="compile">
+    <mkdir dir="${build.dir}"/>
+    <javac srcdir="${src.dir}" destdir="${build.dir}"/>
+  </target>
+
+  <target name="run" depends="compile">
+    <java classname="CycleDetection" classpath="${build.dir}">
+      <arg line="${maxPeriod} ${inMode} ${dataPath}"/>
+    </java>
+  </target>
+
+  <target name="main" depends="clean-build,run"/>
+
+</project>
