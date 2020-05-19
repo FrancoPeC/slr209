@@ -219,7 +219,20 @@ public class CycleDetection {
 		}
 	    }
 	}catch(DataEndException e) {}
+	
+	for(int[] cycleRet : allCycles) {
+	    int cycleTemp[] = new int[cycleRet.length - 2];
+	
+	    System.arraycopy(cycleRet, 0, cycleTemp, 0, cycleTemp.length);
+	    
 
+	    output.write("Cycle of period " + cycleTemp.length +
+			 " from " + cycleRet[cycleRet.length - 2] + " to " +
+			 cycleRet[cycleRet.length - 1]);
+			    
+	    output.write("Cycle: " + Arrays.toString(cycleTemp));
+	}
+	
 	if(cycleStart != -1) {
 	    output.write("Cycle of period " + cycle.length + " from " +
 			 cycleStart + " to " + (currentTime - 1));
