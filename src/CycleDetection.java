@@ -4,26 +4,22 @@ import java.util.*;
 public class CycleDetection {
     private int maxPeriod;
     private int window[];
-    private int lastValue;
-    private int cycleStart;
     private int currentTime;
-    private int cycle[];
+    private Cycle cycle;
     private DataReader input;
     private DetectorOutput output;
     private ArrayList<CycleChecker> checkers;
-    private ArrayList<int []> allCycles;
+    private ArrayList<Cycle> allCycles;
 
     public CycleDetection(int maxPeriod, DataReader input, DetectorOutput output) {
 	this.input = input;
 	this.output = output;
 	this.maxPeriod = maxPeriod;
 	window = new int[2*maxPeriod];
-	lastValue = -1;
-	cycleStart = -1;
 	currentTime = -1;
 	cycle = null;
 
-	allCycles = new ArrayList<int[]>();
+	allCycles = new ArrayList<Cycle>();
 
 	checkers = new ArrayList<CycleChecker>();
 	for(int i = 1; i <= maxPeriod; i++) {
@@ -32,52 +28,27 @@ public class CycleDetection {
 	}
     }
 
-    // private void checkRepetition(int data) {
-    // 	if(data == lastValue && cycleStart[0] == -1) {
-    // 	    cycleStart[0] = currentTime;
-    // 	}
-		
-    // 	else if(data != lastValue) {
-    // 	    if(cycleStart[0] != -1) {
-    // 		output.write("Value " + lastValue + " repeated from " +
-    // 			     cycleStart[0] + " to " + currentTime);
-			
-    // 		cycleStart[0] = -1;
-    // 		lastValue = data;
-    // 	    }
-		    
-    // 	    else lastValue = data;
-    // 	}
-    // }
-
-    // Returns true if the window should be reset
-
     private void printResults() {
 	
-	ArrayList<int[]> cycleRemove = new ArrayList<int[]>();
-	for(int[] cycleRet : allCycles) {
-	    if(cycleStart != -1 && cycleRet[cycleRet.length - 2] >= cycleStart) {
+	ArrayList<Cycle> cycleRemove = new ArrayList<Cycle>();
+	for(Cycle cycleRet : allCycles) {
+	    if(cycle != null && cycleRet.getStart() >= cycle.getStart()) {
 		cycleRemove.add(cycleRet);
 	    }
 	    else {
-		if(cycleRet[cycleRet.length - 1] < currentTime - window.length) {
+		if(cycleRet.getEnd() < currentTime - window.length) {
 
 		    cycleRemove.add(cycleRet);
-	    
-		    int cycleTemp[] = new int[cycleRet.length - 2];
-	
-		    System.arraycopy(cycleRet, 0, cycleTemp, 0, cycleTemp.length);
-	    
 
-		    output.write("Cycle of period " + cycleTemp.length +
-				 " from " + cycleRet[cycleRet.length - 2] + " to " +
-				 cycleRet[cycleRet.length - 1]);
+		    output.write("Cycle of period " + cycleRet.getPeriod() +
+				 " from " + cycleRet.getStart() + " to " +
+				 cycleRet.getEnd());
 			    
-		    output.write("Cycle: " + Arrays.toString(cycleTemp));
+		    output.write("Cycle: " + Arrays.toString(cycleRet.getCycle()));
 		}
 	    }
 	}
-	for(int[] cycleTemp : cycleRemove) {
+	for(Cycle cycleTemp : cycleRemove) {
 	    allCycles.remove(cycleTemp);
 	}
     }
@@ -86,25 +57,25 @@ public class CycleDetection {
     private boolean periodCheck() {
 
 	// If there is an ongoing cycle
-	if(cycleStart != -1) {
+	if(cycle != null) {
 	    
 	    printResults();
 	    
-	    ArrayList<int[]> cycles = new ArrayList<int[]>();
-	    checkers.get(cycle.length - 1).checkCycle(cycles);
+	    ArrayList<Cycle> cycles = new ArrayList<Cycle>();
+	    checkers.get(cycle.getPeriod() - 1).checkCycle(cycles);
 
 	    for(int i = 0; i < window.length - 1; i++)
 		window[i] = window[i + 1];
 
 	    
 	    if(cycles.size() > 0) {
-		output.write("Cycle of period " + cycle.length +
-			     " from " + cycleStart + " to " +
+		output.write("Cycle of period " + cycle.getPeriod() +
+			     " from " + cycle.getStart() + " to " +
 			     (currentTime - 2));
 			    
-		output.write("Cycle: " + Arrays.toString(cycle));
+		output.write("Cycle: " + Arrays.toString(cycle.getCycle()));
 		
-		cycleStart = -1;
+		cycle = null;
 		for(CycleChecker cc : checkers) {
 		    cc.resetOffset();
 		}
@@ -118,36 +89,37 @@ public class CycleDetection {
 
 	for(int period = maxPeriod; period > 0; period--) {
 	    CycleChecker cc = checkers.get(period - 1);
-	    ArrayList<int[]> cycles = new ArrayList<int[]>();
+	    ArrayList<Cycle> cycles = new ArrayList<Cycle>();
 	    
 	    cc.checkCycle(cycles);
 	    
 	    if(cycles.size() > 0) {
 
 		for(int i = 0; i < cycles.size(); i++) {
-		    int cycleRet[] = cycles.get(i);
-		    cycleRet[period] = currentTime - window.length + cycleRet[period];
+		    Cycle cycleRet = cycles.get(i);
+		    cycleRet.setStart(currentTime - window.length + cycleRet.getStart());
 
-		    if(cycleRet[period + 1] != -1) {
+		    if(cycleRet.getEnd() != -1) {
 			
-			cycleRet[period + 1] = currentTime - window.length + cycleRet[period + 1];
+			cycleRet.setEnd(currentTime - window.length + cycleRet.getEnd());
+			
 			boolean flag = false;
 			
-			for(int[] cycleTemp : allCycles) {
+			for(Cycle cycleTemp : allCycles) {
 
-			    if(cycleStart != -1 && cycleStart <= cycleRet[period]) {
+			    if(cycle != null && cycle.getStart() <= cycleRet.getStart()) {
 				flag = true;
 				break;
 			    }
 			    
-			    if(cycleTemp[cycleTemp.length - 2] >= cycleRet[period] &&
-			       cycleTemp[cycleTemp.length - 1] <= cycleRet[period + 1]) {
+			    if(cycleTemp.getStart() >= cycleRet.getStart() &&
+			       cycleTemp.getEnd() <= cycleRet.getEnd()) {
 				allCycles.remove(cycleTemp);
 				break;
 			    }
 
-			    if(cycleTemp[cycleTemp.length - 2] <= cycleRet[period] &&
-			       cycleTemp[cycleTemp.length - 1] >= cycleRet[period + 1]) {
+			    if(cycleTemp.getStart() <= cycleRet.getStart() &&
+			       cycleTemp.getEnd() >= cycleRet.getEnd()) {
 				flag = true;
 				break;
 			    }
@@ -160,11 +132,11 @@ public class CycleDetection {
 
 		    else {
 			
-			if(cycleRet[period] <= cycleStart || cycleStart == -1) {
-			    cycle = new int[period];
-			    System.arraycopy(cycleRet, 0, cycle, 0, period);
+			if(cycle == null || cycleRet.getStart() <= cycle.getStart() ) {
+			    cycle = new Cycle(period);
+			    cycle.setCycle(cycleRet.getCycle());
 
-			    cycleStart = cycleRet[period];
+			    cycle.setStart(cycleRet.getStart());
 			}
 		    }
 		}
@@ -185,8 +157,6 @@ public class CycleDetection {
 		int data = input.getData();
 		window[currentTime] = data;
 		output.write(currentTime + ": " + data);
-
-		//checkRepetition(data);
 	    }
 	    
 	    periodCheck();
@@ -197,8 +167,6 @@ public class CycleDetection {
 	    while(true) {
 		int data = input.getData();
 		output.write(currentTime + ": " + data);
-		
-		//checkRepetition(data);
 
 		currentTime++;
 
@@ -220,24 +188,20 @@ public class CycleDetection {
 	    }
 	}catch(DataEndException e) {}
 	
-	for(int[] cycleRet : allCycles) {
-	    int cycleTemp[] = new int[cycleRet.length - 2];
-	
-	    System.arraycopy(cycleRet, 0, cycleTemp, 0, cycleTemp.length);
-	    
+	for(Cycle cycleRet : allCycles) {
 
-	    output.write("Cycle of period " + cycleTemp.length +
-			 " from " + cycleRet[cycleRet.length - 2] + " to " +
-			 cycleRet[cycleRet.length - 1]);
+	    output.write("Cycle of period " + cycleRet.getPeriod() +
+			 " from " + cycleRet.getStart() + " to " +
+			 cycleRet.getEnd());
 			    
-	    output.write("Cycle: " + Arrays.toString(cycleTemp));
+	    output.write("Cycle: " + Arrays.toString(cycleRet.getCycle()));
 	}
 	
-	if(cycleStart != -1) {
-	    output.write("Cycle of period " + cycle.length + " from " +
-			 cycleStart + " to " + (currentTime - 1));
+	if(cycle != null) {
+	    output.write("Cycle of period " + cycle.getPeriod() + " from " +
+			 cycle.getStart() + " to " + (currentTime - 1));
 			    
-	    output.write("Cycle: " + Arrays.toString(cycle));
+	    output.write("Cycle: " + Arrays.toString(cycle.getCycle()));
 	}
     }
     
