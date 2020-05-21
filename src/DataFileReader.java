@@ -2,41 +2,23 @@ import java.io.*;
 import java.util.*;
 
 public class DataFileReader implements DataReader{
-    private LinkedList<String> files;
+    private LinkedList<File> files;
     private BufferedReader currentFile;
     
     
-    public DataFileReader(String mainFolder) throws IOException, InterruptedException{
-	files = new LinkedList<String>();
-	ProcessBuilder pb = new ProcessBuilder("ls", mainFolder);
-	Process pc = pb.start();
+    public DataFileReader(String mainFolder) throws IOException, InterruptedException {
+	files = new LinkedList<File>();
+	File dataPath = new File(mainFolder);
+	for(File dir : dataPath.listFiles()) {
+	    if(dir.isDirectory()) {
+		for(File f : dir.listFiles()) {
+		    if(f.isFile()) files.push(f);
+		}
+	    }
+	}
 
-	BufferedReader pcReader =
-	    new BufferedReader(new InputStreamReader(pc.getInputStream()));
-
-	 String line;
-	 ArrayList<String> folders = new ArrayList<String>();
-	 while((line = pcReader.readLine()) != null) {
-	     folders.add(mainFolder + "/" + line);
-	 }
-
-	 pc.waitFor();
-
-	 for(String fd : folders) {
-	     pb = new ProcessBuilder("ls", fd);
-	     pc = pb.start();
-
-	     pcReader = new BufferedReader(new InputStreamReader(pc.getInputStream()));
-
-	     while((line = pcReader.readLine()) != null) {
-		 files.push(fd + "/" + line);
-	     }
-
-	     pc.waitFor();
-	 }
-
-	 currentFile = new BufferedReader(new FileReader(files.pop()));
-	 currentFile.readLine();
+	currentFile = new BufferedReader(new FileReader(files.pop()));
+	currentFile.readLine();
     }
 
     
