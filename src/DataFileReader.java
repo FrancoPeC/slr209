@@ -6,7 +6,7 @@ public class DataFileReader implements DataReader{
     private BufferedReader currentFile;
     
     
-    public DataFileReader(String mainFolder) throws IOException, InterruptedException {
+    public DataFileReader(String mainFolder) throws IOException {
 	files = new LinkedList<File>();
 	File dataPath = new File(mainFolder);
 	for(File dir : dataPath.listFiles()) {

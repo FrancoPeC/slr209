@@ -1,20 +1,25 @@
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class CycleChecker {
-    int period;
-    int window[];
-    int offset;
-    boolean cycleContinue;
+public class CycleChecker implements Runnable{
+    private int period;
+    private int window[];
+    private int offset;
+    private boolean cycleContinue;
+    private boolean forced;
+    private ConcurrentLinkedQueue<Cycle> cycles;
 
-    public CycleChecker(int period, int window[]) {
+    public CycleChecker(int period, int window[], ConcurrentLinkedQueue<Cycle> cycles) {
 	this.period = period;
 	this.window = window;
+	this.cycles = cycles;
 	offset = 0;
+	forced = false;
 	cycleContinue = false;
     }
-
-    public void checkCycle(ArrayList<Cycle> cycles) {
+    
+    public void checkCycle() {
 
 	Cycle cycleRet = new Cycle(period);
 	
@@ -32,9 +37,9 @@ public class CycleChecker {
 	if(offset > 0)
 	    offset--;
 
-	if(offset == 0) {
+	if(offset == 0 || forced) {
 	    
-	    for(int i = 0; i <= window.length - 2*period; i++) {
+	    for(int i = offset; i <= window.length - 2*period; i++) {
 		
 		if(window[i] == window[i + period]) {
 		    
@@ -68,17 +73,28 @@ public class CycleChecker {
 			}
 
 			cycles.add(cycleRet);
-
-			cycleRet = new Cycle(period);
-
 		    }
+
+		    cycleRet = new Cycle(period);
 		}
 	    }
 	}
+
+	forced = false;
     }
 
     public void resetOffset() {
-	this.offset = 0;
-	this.cycleContinue = false;
+	offset = 0;
+	cycleContinue = false;
     }
+
+    public void setForced() {
+	forced = true;
+    }
+
+    @Override
+    public void run() {
+	checkCycle();
+    }
+    
 }

@@ -1,7 +1,8 @@
 <project name="CycleDetection" basedir="." default="main">
   <property name="maxPeriod" value="10"/>
-  <property name="inMode" value="0"/>
+  <property name="inMode" value="2"/>
   <property name="dataPath" value="Data"/>
+  <property name="outputFile" value="output.txt"/>
   
   <property name="src.dir"     value="src"/>
 
@@ -20,7 +21,7 @@
 
   <target name="run" depends="compile">
     <java classname="CycleDetection" classpath="${build.dir}">
-      <arg line="${maxPeriod} ${inMode} ${dataPath}"/>
+      <arg line="${maxPeriod} ${inMode} ${dataPath} ${outputFile}"/>
     </java>
   </target>
 
