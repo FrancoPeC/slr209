@@ -1,0 +1,55 @@
+* Cycle detection at runtime
+This program can be used to check cycles on an input data over time.
+It is designed to be able to be executed at the same time as your simulation.
+Its implementation is in java, so it is OS independent.
+** Usage
+To run the example program you need to have Apache Ant installed.
+To run it, you just need to execute the following command on the terminal:
+
+#+BEGIN_SRC shell
+ant
+#+END_SRC
+
+This command will recompile the code and run it with the default parameters.
+If you don't want it to recompile, execute the command:
+
+#+BEGIN_SRC shell
+ant run
+#+END_SRC
+
+There are a few parameters that you can change on the example program.
+To do this, execute the ant command with options:
+
+#+BEGIN_SRC shell
+ant -D<parameter_name>=<value>
+#+END_SRC 
+
+*** maxPeriod
+This is the maximum possible period to be found. Its default value is 10. This is also
+the number of threads used in the program.
+*** dataPath
+The path for the input file or folder to be read and checked.
+*** outputFile
+The path for the file where the output of the program will be written.
+*** inMode
+This is the input/output mode used by the example program. The data read will always
+be written on the terminal. Its possible values are:
+0. The program will open every file on the dataPath folder up to 1 folder inside and
+will write the cycles found on the terminal.
+1. The program will open the file chosen on the dataPath and will write the cycles
+found on the terminal.
+2. The program will open every file on the dataPath folder up to 1 folder inside and
+write the cycles found on the file specified by outputFile.
+3. The program will open the file chosen on the dataPath and will write the cycles
+found on the file specified by outputFile.
+** Input format
+There are two possible choices on the example program: either you have many files that
+are the result of a simulation, or you have a file that is currently being written by
+the simulation. In both cases, the program will ignore the first line of each file and
+the data read will be the last positive integer before a comma on each line.
+
+In the first case, the program will concatenate the results of each file found until
+every file has been read.
+
+In the second case, the program will read the lines as they are written until nothing
+is written for 30 seconds or a line with the string "finish" is found.

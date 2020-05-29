@@ -6,6 +6,7 @@ public class DataSimReader implements DataReader {
     
     public DataSimReader(String fileName) throws IOException {
 	file = new BufferedReader(new FileReader(fileName));
+	file.readLine();
     }
 
     public int getData() throws DataEndException {
@@ -21,6 +22,6 @@ public class DataSimReader implements DataReader {
 	    if(line.equals("finish")) throw new DataEndException();
 	    
 	    return Integer.parseInt(line.split("-")[line.split("-").length - 1].split(",")[0]);
-	    }catch(Exception e) {throw new DataEndException();}
+	    }catch(IOException e) {throw new DataEndException();}
     }
 }

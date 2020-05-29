@@ -3,16 +3,17 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CycleDetection {
-    private int maxPeriod;
-    private int window[];
+    private int maxPeriod; // Maximum period checked
+    private int window[]; // Window of time currently being analysed
     private int currentTime;
-    private Cycle currentCycle ;
-    private DataReader input;
-    private DetectorOutput output;
-    private ArrayList<CycleChecker> checkers;
-    private ArrayList<Cycle> allCycles;
-    private ConcurrentLinkedQueue<Cycle> cyclesFound;
+    private Cycle currentCycle; // Cycle being tracked that may continue
+    private DataReader input; // Responsible for getting the data
+    private DetectorOutput output; // Responsible for writing the output
+    private ArrayList<CycleChecker> checkers; // Responsible for checking a specific period
+    private ArrayList<Cycle> allCycles; // Valid cycles found
+    private ConcurrentLinkedQueue<Cycle> cyclesFound; // All cycles found on the current window
 
+    // Constructor. Initialises the checkers
     public CycleDetection(int maxPeriod, DataReader input, DetectorOutput output) {
 	this.input = input;
 	this.output = output;
@@ -31,6 +32,7 @@ public class CycleDetection {
 	}
     }
 
+    // Prints all valid cycles that cannot be replaced anymore
     private void printResults() {
 	
 	ArrayList<Cycle> cycleRemove = new ArrayList<Cycle>();
@@ -43,11 +45,11 @@ public class CycleDetection {
 
 		    cycleRemove.add(cycleRet);
 
-		    output.write("Cycle of period " + cycleRet.getPeriod() +
+		    output.writeCycle("Cycle of period " + cycleRet.getPeriod() +
 				 " from " + cycleRet.getStart() + " to " +
 				 cycleRet.getEnd());
 			    
-		    output.write("Cycle: " + Arrays.toString(cycleRet.getCycle()));
+		    output.writeCycle("Cycle: " + Arrays.toString(cycleRet.getCycle()));
 		}
 	    }
 	}
@@ -63,8 +65,11 @@ public class CycleDetection {
 	ArrayList<Thread> threads = new ArrayList<Thread>();
 	checkers.forEach(cc -> {
 		
-		// Force them to check if there is a current cycle
-		if(currentCycle != null) cc.setForced();
+		// Force them to check if there is a current cycle with bigger period
+		if(currentCycle != null &&
+		   currentCycle.getPeriod() > cc.getPeriod())
+
+		    cc.setForced();
 		
 		Thread t = new Thread(cc);
 		threads.add(t); t.start();
@@ -133,8 +138,11 @@ public class CycleDetection {
 			// Checks if there is an identical or conflicting cycle registered
 			for(Cycle cycleTemp : allCycles) {
 
+			    // If both cycles happen at the same time.
 			    if(cycleTemp.getStart() == cycleRet.getStart() &&
 			       cycleTemp.getEnd() == cycleRet.getEnd()) {
+
+				// Picks the one with the smallest period
 				if(cycleTemp.getPeriod() > cycleRet.getPeriod()) {
 				    allCycles.remove(cycleTemp);
 				    break;
@@ -145,13 +153,15 @@ public class CycleDetection {
 				    break;
 				}
 			    }
-			    
+
+			    // If the cycle previously stored can be replaced
 			    if(cycleTemp.getStart() >= cycleRet.getStart() &&
 			       cycleTemp.getEnd() <= cycleRet.getEnd()) {
 				allCycles.remove(cycleTemp);
 				break;
 			    }
 
+			    // If this cycle is invalid
 			    if(cycleTemp.getStart() <= cycleRet.getStart() &&
 			       cycleTemp.getEnd() >= cycleRet.getEnd()) {
 				flag = true;
@@ -164,8 +174,10 @@ public class CycleDetection {
 			}
 		    }
 
+		    // If the cycle may continue
 		    else {
-			
+
+			// If ther isn't a current tracked cycle or it can be replaced
 			if((currentCycle == null ||
 			    cycleRet.getStart() < currentCycle.getStart()) ||
 			   (cycleRet.getStart() == currentCycle.getStart() &&
@@ -178,6 +190,7 @@ public class CycleDetection {
 		}
 	    }
 
+	    // If the current tracked cycle has ended and cannot be replaced
 	    if(print) {
 		
 		printResults();
@@ -185,11 +198,11 @@ public class CycleDetection {
 		for(int i = 0; i < window.length - 1; i++)
 		    window[i] = window[i + 1];
 		
-		output.write("Cycle of period " + currentCycle.getPeriod() +
+		output.writeCycle("Cycle of period " + currentCycle.getPeriod() +
 			     " from " + currentCycle.getStart() + " to " +
 			     (currentTime - 2));
 			    
-		output.write("Cycle: " + Arrays.toString(currentCycle.getCycle()));
+		output.writeCycle("Cycle: " + Arrays.toString(currentCycle.getCycle()));
 		
 		currentCycle = null;
 
@@ -213,7 +226,7 @@ public class CycleDetection {
 	    for(currentTime = 0; currentTime < window.length; currentTime++) {
 		int data = input.getData();
 		window[currentTime] = data;
-		output.write(currentTime + ": " + data);
+		output.writeData(currentTime + ": " + data);
 	    }
 	    
 	    periodCheck();
@@ -223,7 +236,7 @@ public class CycleDetection {
 	    
 	    while(true) {
 		int data = input.getData();
-		output.write(currentTime + ": " + data);
+		output.writeData(currentTime + ": " + data);
 
 		currentTime++;
 
@@ -247,18 +260,18 @@ public class CycleDetection {
 	
 	for(Cycle cycleRet : allCycles) {
 
-	    output.write("Cycle of period " + cycleRet.getPeriod() +
+	    output.writeCycle("Cycle of period " + cycleRet.getPeriod() +
 			 " from " + cycleRet.getStart() + " to " +
 			 cycleRet.getEnd());
 			    
-	    output.write("Cycle: " + Arrays.toString(cycleRet.getCycle()));
+	    output.writeCycle("Cycle: " + Arrays.toString(cycleRet.getCycle()));
 	}
 	
 	if(currentCycle != null) {
-	    output.write("Cycle of period " + currentCycle.getPeriod() + " from " +
+	    output.writeCycle("Cycle of period " + currentCycle.getPeriod() + " from " +
 			 currentCycle.getStart() + " to " + (currentTime - 1));
 			    
-	    output.write("Cycle: " + Arrays.toString(currentCycle.getCycle()));
+	    output.writeCycle("Cycle: " + Arrays.toString(currentCycle.getCycle()));
 	}
     }
     

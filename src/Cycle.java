@@ -1,9 +1,12 @@
-public class Cycle {
-    private int position;
-    private int cycle[];
-    private int startTime;
-    private int endTime;
 
+// Class representing a cycle
+public class Cycle {
+    private int cycle[]; // Cycle pattern
+    private int startTime; // The time it started
+    private int endTime; // The time it ended
+    private int position; // Next position in the pattern to be updated
+
+    // Constructor.
     public Cycle(int period) {
 	cycle = new int[period];
 	startTime = -1;
@@ -31,6 +34,7 @@ public class Cycle {
 	return cycle.length;
     }
 
+    // Adds a value to the cycle pattern on the last updated position
     public boolean addValue(int value) {
 	if(position < cycle.length) {
 	    cycle[position] = value;
@@ -40,6 +44,7 @@ public class Cycle {
 	else return false;
     }
 
+    // Sets the cycle pattern
     public void setCycle(int cycle[]) {
 	if(cycle != null) {
 	    this.cycle = new int[cycle.length];
@@ -49,6 +54,7 @@ public class Cycle {
 	else cycle = null;
     }
 
+    // Gets the cycle pattern
     public int[] getCycle() {
 	if(cycle != null) {
 	    int cycleRet[] = new int[cycle.length];

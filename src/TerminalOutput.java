@@ -4,7 +4,11 @@ import java.util.*;
 public class TerminalOutput implements DetectorOutput{
     public TerminalOutput() {}
 
-    public void write(String s) {
+    public void writeData(String s) {
+	System.out.println(s);
+    }
+
+    public void writeCycle(String s) {
 	System.out.println(s);
     }
 
