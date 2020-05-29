@@ -15,6 +15,10 @@ public class DataFileReader implements DataReader{
 		    if(f.isFile()) files.push(f);
 		}
 	    }
+	    
+	    else if(dir.isFile()) {
+		files.push(dir);
+	    }
 	}
 
 	currentFile = new BufferedReader(new FileReader(files.pop()));
