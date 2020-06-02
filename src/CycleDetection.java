@@ -214,7 +214,8 @@ public class CycleDetection {
 	}
 
 	printResults();
-	
+
+	// Moves the window of data
 	for(int i = 0; i < window.length - 1; i++)
 	    window[i] = window[i + 1];
 
@@ -222,7 +223,9 @@ public class CycleDetection {
     }    
 
     public void detectCycles() {
+	boolean started = false;
 	try {
+	    // Fills the frame with data
 	    for(currentTime = 0; currentTime < window.length; currentTime++) {
 		int data = input.getData();
 		window[currentTime] = data;
@@ -233,6 +236,8 @@ public class CycleDetection {
 
 	    boolean reset = false;
 	    int count = 1;
+
+	    started = true;
 	    
 	    while(true) {
 		int data = input.getData();
@@ -240,13 +245,17 @@ public class CycleDetection {
 
 		currentTime++;
 
+		// If an ongoing cycle has ended,
+		// the window is filled completely again
 		if(reset) {
+		    started = false;
 		    window[count] = data;
 		    count++;
 		    
 		    if(count == window.length) {
 			reset = periodCheck();
 			count = 1;
+			started = true;
 		    }
 		}
 		
@@ -257,7 +266,13 @@ public class CycleDetection {
 		}
 	    }
 	}catch(DataEndException e) {}
-	
+
+	// If the frame was never filled
+        if(!started) {
+	    periodCheck();
+	}
+
+	// Prints the remaining cycles stored
 	for(Cycle cycleRet : allCycles) {
 
 	    output.writeCycle("Cycle of period " + cycleRet.getPeriod() +
@@ -266,7 +281,8 @@ public class CycleDetection {
 			    
 	    output.writeCycle("Cycle: " + Arrays.toString(cycleRet.getCycle()));
 	}
-	
+
+	// If there was an ongoing cycle, prints it
 	if(currentCycle != null) {
 	    output.writeCycle("Cycle of period " + currentCycle.getPeriod() + " from " +
 			 currentCycle.getStart() + " to " + (currentTime - 1));
