@@ -18,6 +18,12 @@ If you don't want it to recompile, execute the command:
 ant run
 #+END_SRC
 
+If you just want to compile the code, use execute the command:
+
+#+BEGIN_SRC shell
+ant compile
+#+END_SRC
+
 There are a few parameters that you can change on the example program.
 To do this, execute the ant command with options:
 
@@ -66,3 +72,22 @@ The cycles detected are written on the following format:
 Cycle of period <Period> from <Time> to <Time>
 Cycle: [v1, v2, .., vn]
 #+END_SRC
+
+** Test for writing on the same file
+In order to test the possibility of writing the data into a file while the
+detection reads from this file, you can use the program in the WriteTest.java
+file. In one terminal, after compiling the code using ant, execute the command:
+
+#+BEGIN_SRC shell
+java -cp build WriteTest
+#+END_SRC
+
+This program will write a number in a file test.txt every second. Then, open a second terminal and
+run the following command:
+
+#+BEGIN_SRC 
+ant run -DinMode=1 -DdataPath=test.txt
+#+END_SRC
+
+You can then see that the cycle detector is waiting for the data to arrive, and getting it as soon
+as it is written.

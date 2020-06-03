@@ -24,7 +24,7 @@ public class WriteTest {
 
     public static void main(String args[]) {
 	WriteTest wt = new WriteTest("test.txt");
-	for(int i = 0; i < 20; i++) {
+	for(int i = 0; i < 40; i++) {
 	    long startTime = System.currentTimeMillis();
 	    while(System.currentTimeMillis() - startTime < 1000) {}
 	    wt.write((i % 10) + ",");
