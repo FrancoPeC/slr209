@@ -106,6 +106,10 @@ public class CycleChecker implements Runnable{
 	return period;
     }
 
+    public void setWindow(int window[]) {
+	this.window = window;
+    }
+
     @Override
     public void run() {
 	checkCycle();

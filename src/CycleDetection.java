@@ -220,22 +220,36 @@ public class CycleDetection {
 	    window[i] = window[i + 1];
 
 	return false;
-    }    
+    }
 
+    private void finalCheck(int length) {
+	if (length > 1) {
+	    int w[] = new int[length];
+	    System.arraycopy(window, 0, w, 0, length);
+	    window = w;
+	    checkers.forEach(cc -> cc.setWindow(w));
+
+	    periodCheck();
+	}
+    }
+
+    // Method for starting the cycle detection
     public void detectCycles() {
 	boolean started = false;
+	int count = 0;
 	try {
 	    // Fills the frame with data
 	    for(currentTime = 0; currentTime < window.length; currentTime++) {
 		int data = input.getData();
 		window[currentTime] = data;
 		output.writeData(currentTime + ": " + data);
+		count++;
 	    }
 	    
 	    periodCheck();
 
 	    boolean reset = false;
-	    int count = 1;
+	    count = 0;
 
 	    started = true;
 	    
@@ -248,13 +262,13 @@ public class CycleDetection {
 		// If an ongoing cycle has ended,
 		// the window is filled completely again
 		if(reset) {
+		    count++;
 		    started = false;
 		    window[count] = data;
-		    count++;
 		    
 		    if(count == window.length) {
 			reset = periodCheck();
-			count = 1;
+			count = 0;
 			started = true;
 		    }
 		}
@@ -269,7 +283,7 @@ public class CycleDetection {
 
 	// If the frame was never filled
         if(!started) {
-	    periodCheck();
+	    finalCheck(count + 1);
 	}
 
 	// Prints the remaining cycles stored
