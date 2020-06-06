@@ -46,10 +46,13 @@ public class CycleDetection {
 		    cycleRemove.add(cycleRet);
 
 		    output.writeCycle("Cycle of period " + cycleRet.getPeriod() +
-				 " from " + cycleRet.getStart() + " to " +
-				 cycleRet.getEnd());
+				      " from " + cycleRet.getStart() + " to " +
+				      cycleRet.getEnd() + " repeated " +
+				      (cycleRet.getEnd() - cycleRet.getStart()) / cycleRet.getPeriod()
+				      + " times");
 			    
 		    output.writeCycle("Cycle: " + Arrays.toString(cycleRet.getCycle()));
+		    output.writeCycle("");
 		}
 	    }
 	}
@@ -185,6 +188,10 @@ public class CycleDetection {
 			
 			    currentCycle = cycleRet;
 			    print = false;
+
+			    output.writeCycle("Cycle of values : " + Arrays.toString(currentCycle.getCycle()));
+			    output.writeCycle("Started at " + currentCycle.getStart());
+			    output.writeCycle("");
 			}
 		    }
 		}
@@ -199,10 +206,13 @@ public class CycleDetection {
 		    window[i] = window[i + 1];
 		
 		output.writeCycle("Cycle of period " + currentCycle.getPeriod() +
-			     " from " + currentCycle.getStart() + " to " +
-			     (currentTime - 2));
+				  " from " + currentCycle.getStart() + " to " +
+				  (currentTime - 2) + " repeated " +
+				  ((currentTime - 2) - currentCycle.getStart()) / currentCycle.getPeriod()
+				  + " times");
 			    
 		output.writeCycle("Cycle: " + Arrays.toString(currentCycle.getCycle()));
+		output.writeCycle("");
 		
 		currentCycle = null;
 
@@ -266,7 +276,7 @@ public class CycleDetection {
 		    started = false;
 		    window[count] = data;
 		    
-		    if(count == window.length) {
+		    if(count == window.length - 1) {
 			reset = periodCheck();
 			count = 0;
 			started = true;
@@ -290,16 +300,21 @@ public class CycleDetection {
 	for(Cycle cycleRet : allCycles) {
 
 	    output.writeCycle("Cycle of period " + cycleRet.getPeriod() +
-			 " from " + cycleRet.getStart() + " to " +
-			 cycleRet.getEnd());
+			      " from " + cycleRet.getStart() + " to " +
+			      cycleRet.getEnd() + " repeated " +
+			      (cycleRet.getEnd() - cycleRet.getStart()) / cycleRet.getPeriod()
+			      + " times");
 			    
 	    output.writeCycle("Cycle: " + Arrays.toString(cycleRet.getCycle()));
+	    output.writeCycle("");
 	}
 
 	// If there was an ongoing cycle, prints it
 	if(currentCycle != null) {
 	    output.writeCycle("Cycle of period " + currentCycle.getPeriod() + " from " +
-			 currentCycle.getStart() + " to " + (currentTime - 1));
+			      currentCycle.getStart() + " to " + (currentTime - 1) + " repeated " +
+			      ((currentTime - 1) - currentCycle.getStart()) / currentCycle.getPeriod()
+			      + " times");
 			    
 	    output.writeCycle("Cycle: " + Arrays.toString(currentCycle.getCycle()));
 	}

@@ -1,7 +1,7 @@
 <project name="CycleDetection" basedir="." default="main">
-  <property name="maxPeriod" value="10"/>
-  <property name="inMode" value="3"/>
-  <property name="dataPath" value="input.txt"/>
+  <property name="maxPeriod" value="30"/>
+  <property name="inMode" value="2"/>
+  <property name="dataPath" value="DataTest"/>
   <property name="outputFile" value="output.txt"/>
   
   <property name="src.dir"     value="src"/>
