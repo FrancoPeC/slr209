@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CycleDetection {
     private int maxPeriod; // Maximum period checked
-    private int window[]; // Window of time currently being analysed
+    private DataWindow window; // Window of time currently being analysed
     private int currentTime;
     private Cycle currentCycle; // Cycle being tracked that may continue
     private DataReader input; // Responsible for getting the data
@@ -18,7 +18,7 @@ public class CycleDetection {
 	this.input = input;
 	this.output = output;
 	this.maxPeriod = maxPeriod;
-	window = new int[2*maxPeriod];
+	window = new DataWindow(2*maxPeriod);
 	currentTime = -1;
 	currentCycle = null;
 
@@ -41,7 +41,7 @@ public class CycleDetection {
 		cycleRemove.add(cycleRet);
 	    }
 	    else {
-		if(cycleRet.getEnd() < currentTime - window.length) {
+		if(cycleRet.getEnd() < currentTime - window.getSize()) {
 
 		    cycleRemove.add(cycleRet);
 
@@ -103,11 +103,11 @@ public class CycleDetection {
 		// If the cycle found is a new cycle
 		else {
 		
-		    cycleRet.setStart(currentTime - window.length + cycleRet.getStart());
+		    cycleRet.setStart(currentTime - window.getSize() + cycleRet.getStart());
 		    // If the cycle has ended inside the window
 		    if(cycleRet.getEnd() != -1) {
 			
-			cycleRet.setEnd(currentTime - window.length + cycleRet.getEnd());
+			cycleRet.setEnd(currentTime - window.getSize() + cycleRet.getEnd());
 			
 			boolean flag = false;
 
@@ -201,9 +201,6 @@ public class CycleDetection {
 	    if(print) {
 		
 		printResults();
-
-		for(int i = 0; i < window.length - 1; i++)
-		    window[i] = window[i + 1];
 		
 		output.writeCycle("Cycle of period " + currentCycle.getPeriod() +
 				  " from " + currentCycle.getStart() + " to " +
@@ -218,29 +215,18 @@ public class CycleDetection {
 
 		checkers.forEach(cc -> cc.resetOffset());
 
-		window[0] = window[window.length - 1];
+		window.reset();
 		return true;
 	    }
 	}
 
 	printResults();
 
-	// Moves the window of data
-	for(int i = 0; i < window.length - 1; i++)
-	    window[i] = window[i + 1];
-
 	return false;
     }
 
     private void finalCheck(int length) {
-	if (length > 1) {
-	    int w[] = new int[length];
-	    System.arraycopy(window, 0, w, 0, length);
-	    window = w;
-	    checkers.forEach(cc -> cc.setWindow(w));
 
-	    periodCheck();
-	}
     }
 
     // Method for starting the cycle detection
@@ -249,9 +235,9 @@ public class CycleDetection {
 	int count = 0;
 	try {
 	    // Fills the frame with data
-	    for(currentTime = 0; currentTime < window.length; currentTime++) {
+	    for(currentTime = 0; currentTime < window.getSize(); currentTime++) {
 		int data = input.getData();
-		window[currentTime] = data;
+                window.addValue(data);
 		output.writeData(currentTime + ": " + data);
 		count++;
 	    }
@@ -274,9 +260,9 @@ public class CycleDetection {
 		if(reset) {
 		    count++;
 		    started = false;
-		    window[count] = data;
+		    window.addValue(data);
 		    
-		    if(count == window.length - 1) {
+		    if(count == window.getSize() - 1) {
 			reset = periodCheck();
 			count = 0;
 			started = true;
@@ -284,7 +270,7 @@ public class CycleDetection {
 		}
 		
 		else {
-		    window[window.length - 1] = data;
+                    window.addValue(data);
 
 		    reset = periodCheck();
 		}
@@ -292,8 +278,9 @@ public class CycleDetection {
 	}catch(DataEndException e) {}
 
 	// If the frame was never filled
-        if(!started) {
-	    finalCheck(count + 1);
+        if(!started && count > 0) {            
+	    window.setSize(count + 2);
+	    periodCheck();
 	}
 
 	// Prints the remaining cycles stored

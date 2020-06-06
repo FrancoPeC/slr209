@@ -4,14 +4,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CycleChecker implements Runnable{
     private int period; // Cycle period
-    private int window[]; // Window of time to be read
+    private DataWindow window; // Window of time to be read
     private int offset; // Starting position not yet analysed
     private boolean cycleContinue; // If the cycle may continue in the next window
     private boolean forced; // Force the analysis
     private ConcurrentLinkedQueue<Cycle> cycles; // Where to save the found cycles
 
     // Constructor
-    public CycleChecker(int period, int window[], ConcurrentLinkedQueue<Cycle> cycles) {
+    public CycleChecker(int period, DataWindow window, ConcurrentLinkedQueue<Cycle> cycles) {
 	this.period = period;
 	this.window = window;
 	this.cycles = cycles;
@@ -29,7 +29,7 @@ public class CycleChecker implements Runnable{
 	if(cycleContinue) {
 
 	    // If the cycle has ended, add an empty cycle to the shared object
-	    if(window[window.length - 1] != window[window.length - period - 1]) {
+	    if(window.get(window.getSize() - 1) != window.get(window.getSize() - period - 1)) {
 		offset--;
 		cycleContinue = false;
 		cycles.add(cycleRet);
@@ -44,21 +44,21 @@ public class CycleChecker implements Runnable{
 
 	if(offset == 0 || forced) {
 	    
-	    for(int i = offset; i <= window.length - 2*period; i++) {
+	    for(int i = offset; i <= window.getSize() - 2*period; i++) {
 
 		// If a cycle of this period may exist
-		if(window[i] == window[i + period]) {
+		if(window.get(i) == window.get(i + period)) {
 		    
 		    cycleRet.setStart(i);
-		    cycleRet.addValue(window[i]);
+		    cycleRet.addValue(window.get(i));
 
 		    // Checks if a full cycle has happened, saving it
 		    for(i++; (i < cycleRet.getStart() + period) &&
-			    (i < window.length - period); i++) {
+			    (i < window.getSize() - period); i++) {
 			
-			cycleRet.addValue(window[i]);
+			cycleRet.addValue(window.get(i));
 		    
-			if(window[i] != window[i + period]) {
+			if(window.get(i) != window.get(i + period)) {
 			    cycleRet.setStart(-1);
 			    offset = i;
 			    break;
@@ -69,15 +69,15 @@ public class CycleChecker implements Runnable{
 		    if(cycleRet.getStart() != -1) {
 
 			// Checks where it ends
-			while(i < window.length - period &&
-			      window[i] == window[i + period]) i++;
+			while(i < window.getSize() - period &&
+			      window.get(i) == window.get(i + period)) i++;
 
 			cycleRet.setEnd(i + period - 1);
 
 			offset = i;
 
 			// If the cycle may continue to the next window
-			if(i == window.length - period) {
+			if(i == window.getSize() - period) {
 			    cycleContinue = true;
 			    cycleRet.setEnd(-1);
 			}
@@ -106,7 +106,7 @@ public class CycleChecker implements Runnable{
 	return period;
     }
 
-    public void setWindow(int window[]) {
+    public void setWindow(DataWindow window) {
 	this.window = window;
     }
 
