@@ -69,7 +69,7 @@ following format:
 The cycles detected are written on the following format:
 
 #+BEGIN_SRC shell
-Cycle of period <Period> from <Time> to <Time>
+Cycle of period <Period> from <Time> to <Time> repeated <value> times
 Cycle: [v1, v2, .., vn]
 #+END_SRC
 

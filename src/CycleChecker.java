@@ -97,7 +97,8 @@ public class CycleChecker implements Runnable{
 	offset = 0;
 	cycleContinue = false;
     }
-    
+
+    // Forces execution
     public void setForced() {
 	forced = true;
     }

@@ -21,7 +21,9 @@ public class DataFileReader implements DataReader{
 	    }
 	}
 
-	currentFile = new BufferedReader(new FileReader(files.pop()));
+	File f = files.pop();
+	currentFile = new BufferedReader(new FileReader(f));
+	System.out.println("Reading file: " + f.getPath());
 	currentFile.readLine();
     }
 
@@ -31,7 +33,9 @@ public class DataFileReader implements DataReader{
 	try {
 	    if((line = currentFile.readLine()) == null) {
 		currentFile.close();
-		currentFile = new BufferedReader(new FileReader(files.pop()));
+		File f = files.pop();
+		currentFile = new BufferedReader(new FileReader(f));
+		System.out.println("Reading file: " + f.getPath());
 		currentFile.readLine();
 		line = currentFile.readLine();
 	    }

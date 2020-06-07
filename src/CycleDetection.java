@@ -13,7 +13,7 @@ public class CycleDetection {
     private ArrayList<Cycle> allCycles; // Valid cycles found
     private ConcurrentLinkedQueue<Cycle> cyclesFound; // All cycles found on the current window
 
-    // Constructor. Initialises the checkers
+    // Constructor. Initialises the checkers and variables
     public CycleDetection(int maxPeriod, DataReader input, DetectorOutput output) {
 	this.input = input;
 	this.output = output;
@@ -41,7 +41,7 @@ public class CycleDetection {
 		cycleRemove.add(cycleRet);
 	    }
 	    else {
-		if(cycleRet.getEnd() < currentTime - window.getSize()) {
+		if(cycleRet.getStart() < currentTime - window.getSize()) {
 
 		    cycleRemove.add(cycleRet);
 
@@ -69,9 +69,7 @@ public class CycleDetection {
 	checkers.forEach(cc -> {
 		
 		// Force them to check if there is a current cycle with bigger period
-		if(currentCycle != null &&
-		   currentCycle.getPeriod() > cc.getPeriod())
-
+		if(currentCycle != null)
 		    cc.setForced();
 		
 		Thread t = new Thread(cc);
@@ -180,7 +178,7 @@ public class CycleDetection {
 		    // If the cycle may continue
 		    else {
 
-			// If ther isn't a current tracked cycle or it can be replaced
+			// If there isn't a current tracked cycle or it can be replaced
 			if((currentCycle == null ||
 			    cycleRet.getStart() < currentCycle.getStart()) ||
 			   (cycleRet.getStart() == currentCycle.getStart() &&
@@ -241,14 +239,16 @@ public class CycleDetection {
 		output.writeData(currentTime + ": " + data);
 		count++;
 	    }
-	    
+
+	    // Checks for the first time
 	    periodCheck();
 
 	    boolean reset = false;
 	    count = 0;
 
 	    started = true;
-	    
+
+	    // While no DataEndException was received
 	    while(true) {
 		int data = input.getData();
 		output.writeData(currentTime + ": " + data);
@@ -268,7 +268,8 @@ public class CycleDetection {
 			started = true;
 		    }
 		}
-		
+
+		// Continues the usual check
 		else {
                     window.addValue(data);
 
@@ -277,7 +278,7 @@ public class CycleDetection {
 	    }
 	}catch(DataEndException e) {}
 
-	// If the frame was never filled
+	// If the frame was not filled entirely
         if(!started && count > 0) {            
 	    window.setSize(count + 2);
 	    periodCheck();
