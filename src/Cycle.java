@@ -5,6 +5,7 @@ public class Cycle {
     private int startTime; // The time it started
     private int endTime; // The time it ended
     private int position; // Next position in the pattern to be updated
+    public  long id; // Unique id of the cycle.
 
     // Constructor.
     public Cycle(int period) {
@@ -12,6 +13,7 @@ public class Cycle {
 	startTime = -1;
 	endTime = -1;
 	position = 0;
+	id = -1;
     }
 
     public void setStart(int startTime) {

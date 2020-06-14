@@ -8,32 +8,32 @@ To run the example program you need to have Apache Ant installed.
 To run it, you just need to execute the following command on the terminal:
 
 #+BEGIN_SRC shell
-ant
+$ ant
 #+END_SRC
 
 This command will recompile the code and run it with the default parameters.
 If you don't want it to recompile, execute the command:
 
 #+BEGIN_SRC shell
-ant run
+$ ant run
 #+END_SRC
 
 If you just want to compile the code, use execute the command:
 
 #+BEGIN_SRC shell
-ant compile
+$ ant compile
 #+END_SRC
 
 There are a few parameters that you can change on the example program.
 To do this, execute the ant command with options:
 
 #+BEGIN_SRC shell
-ant -D<parameter1_name>=<value1> -D<parameter2_name>=<value2> ...
+$ ant -D<parameter1_name>=<value1> -D<parameter2_name>=<value2> ...
 #+END_SRC 
 
 The parameters you can change are:
 *** maxPeriod
-This is the maximum possible period to be found. Its default value is 10. This is also
+This is the maximum possible period to be found. Its default value is 30. This is also
 the number of threads used in the program.
 *** dataPath
 The path for the input file or folder to be read and checked.
@@ -66,11 +66,36 @@ following format:
 <Time> : <value>
 #+END_SRC
 
-The cycles detected are written on the following format:
+The cycles detected are written as they are detected and validated. 
+When a cycle is detected and it has already ended, it will be printed as:
 
 #+BEGIN_SRC shell
-Cycle of period <Period> from <Time> to <Time> repeated <value> times
-Cycle: [v1, v2, .., vn]
+Cycle Found
+Cycle ID : <ID>
+Cycle of period <n>
+Time span : <Time> to <Time>
+Repeated <x> times
+Values: [v1, v2, .., vn]
+#+END_SRC
+
+If it hasn't ended yet, it will be printed as:
+
+#+BEGIN_SRC shell
+Cycle Found
+Cycle ID : <ID>
+Values : [v1, v2, .., vn]
+Started at <Time>
+#+END_SRC
+
+When this cycle ends, it will be printed as:
+
+#+BEGIN_SRC shell
+Cycle Ended
+Cycle ID : <ID>
+Cycle of period <n>
+Time span : <Time> to <Time>
+Repeated <x> times
+Values: [v1, v2, .., vn]
 #+END_SRC
 
 ** Test for writing on the same file

@@ -12,6 +12,7 @@ public class CycleDetection {
     private ArrayList<CycleChecker> checkers; // Responsible for checking a specific period
     private ArrayList<Cycle> allCycles; // Valid cycles found
     private ConcurrentLinkedQueue<Cycle> cyclesFound; // All cycles found on the current window
+    private long lastID;
 
     // Constructor. Initialises the checkers and variables
     public CycleDetection(int maxPeriod, DataReader input, DetectorOutput output) {
@@ -21,6 +22,7 @@ public class CycleDetection {
 	window = new DataWindow(2*maxPeriod);
 	currentTime = -1;
 	currentCycle = null;
+	lastID = 0;
 
 	cyclesFound = new ConcurrentLinkedQueue<Cycle>();
 	allCycles = new ArrayList<Cycle>();
@@ -45,13 +47,15 @@ public class CycleDetection {
 
 		    cycleRemove.add(cycleRet);
 
-		    output.writeCycle("Cycle of period " + cycleRet.getPeriod() +
-				      " from " + cycleRet.getStart() + " to " +
-				      cycleRet.getEnd() + " repeated " +
+		    output.writeCycle("Cycle Found");
+		    output.writeCycle("Cycle ID : " + cycleRet.id);
+		    output.writeCycle("Cycle of period " + cycleRet.getPeriod());
+		    output.writeCycle("Time span : " + cycleRet.getStart() + " to " +
+				      cycleRet.getEnd());
+		    output.writeCycle("Repeated " +
 				      (cycleRet.getEnd() - cycleRet.getStart()) / cycleRet.getPeriod()
 				      + " times");
-			    
-		    output.writeCycle("Cycle: " + Arrays.toString(cycleRet.getCycle()));
+		    output.writeCycle("Values: " + Arrays.toString(cycleRet.getCycle()));
 		    output.writeCycle("");
 		}
 	    }
@@ -90,7 +94,7 @@ public class CycleDetection {
 	    // Chcecks the validity of each cycle found
 	    while((cycleRet = cyclesFound.poll()) != null) {
 
-		// If a cycle has ended
+		// If a tracked cycle has ended
 		if(cycleRet.getStart() == -1) {
 		    // If the cycle that ended is the current tracked cycle
 		    if(cycleRet.getPeriod() == currentCycle.getPeriod()) {
@@ -121,12 +125,14 @@ public class CycleDetection {
 			       cycleRet.getEnd() == currentTime - 2){
 				
 				if(print) {
+				    cycleRet.id = currentCycle.id;
 				    currentCycle = cycleRet;
 				}
 				else {
 				    for(Cycle cycleTemp : cyclesFound) {
 					if(cycleTemp.getStart() == -1 &&
 					   cycleTemp.getPeriod() == currentCycle.getPeriod()) {
+					    cycleRet.id = currentCycle.id;
 					    currentCycle = cycleRet;
 					    print = true;
 					    break;
@@ -145,6 +151,7 @@ public class CycleDetection {
 
 				// Picks the one with the smallest period
 				if(cycleTemp.getPeriod() > cycleRet.getPeriod()) {
+				    if (cycleTemp.id != -1) cycleRet.id = cycleTemp.id;
 				    allCycles.remove(cycleTemp);
 				    break;
 				}
@@ -158,6 +165,8 @@ public class CycleDetection {
 			    // If the cycle previously stored can be replaced
 			    if(cycleTemp.getStart() >= cycleRet.getStart() &&
 			       cycleTemp.getEnd() <= cycleRet.getEnd()) {
+				
+				if (cycleTemp.id != -1) cycleRet.id = cycleTemp.id;
 				allCycles.remove(cycleTemp);
 				break;
 			    }
@@ -172,6 +181,10 @@ public class CycleDetection {
 			
 			if(!flag){
 			    allCycles.add(cycleRet);
+			    if (cycleRet.id == -1) {
+				cycleRet.id = lastID;
+				lastID++;
+			    }
 			}
 		    }
 
@@ -183,11 +196,18 @@ public class CycleDetection {
 			    cycleRet.getStart() < currentCycle.getStart()) ||
 			   (cycleRet.getStart() == currentCycle.getStart() &&
 			    cycleRet.getPeriod() < currentCycle.getPeriod())) {
-			
+
+			    if (currentCycle != null) cycleRet.id = currentCycle.id;
+			    else {
+				cycleRet.id = lastID;
+				lastID++;
+			    }
 			    currentCycle = cycleRet;
 			    print = false;
 
-			    output.writeCycle("Cycle of values : " + Arrays.toString(currentCycle.getCycle()));
+			    output.writeCycle("Cycle Found");
+			    output.writeCycle("Cycle ID : " + currentCycle.id);
+			    output.writeCycle("Values : " + Arrays.toString(currentCycle.getCycle()));
 			    output.writeCycle("Started at " + currentCycle.getStart());
 			    output.writeCycle("");
 			}
@@ -195,18 +215,21 @@ public class CycleDetection {
 		}
 	    }
 
+	    printResults();
+	    
 	    // If the current tracked cycle has ended and cannot be replaced
 	    if(print) {
 		
-		printResults();
-		
-		output.writeCycle("Cycle of period " + currentCycle.getPeriod() +
-				  " from " + currentCycle.getStart() + " to " +
-				  (currentTime - 2) + " repeated " +
+		output.writeCycle("Cycle Ended");
+		output.writeCycle("Cycle ID : " + currentCycle.id);
+		output.writeCycle("Cycle of period " + currentCycle.getPeriod());
+		output.writeCycle("Time span : " + currentCycle.getStart() + " to " +
+				  (currentTime - 2));
+		output.writeCycle("Repeated " +
 				  ((currentTime - 2) - currentCycle.getStart()) / currentCycle.getPeriod()
 				  + " times");
 			    
-		output.writeCycle("Cycle: " + Arrays.toString(currentCycle.getCycle()));
+		output.writeCycle("Values: " + Arrays.toString(currentCycle.getCycle()));
 		output.writeCycle("");
 		
 		currentCycle = null;
@@ -217,8 +240,6 @@ public class CycleDetection {
 		return true;
 	    }
 	}
-
-	printResults();
 
 	return false;
     }
@@ -286,25 +307,30 @@ public class CycleDetection {
 
 	// Prints the remaining cycles stored
 	for(Cycle cycleRet : allCycles) {
-
-	    output.writeCycle("Cycle of period " + cycleRet.getPeriod() +
-			      " from " + cycleRet.getStart() + " to " +
-			      cycleRet.getEnd() + " repeated " +
+	    output.writeCycle("Cycle Found");
+	    output.writeCycle("Cycle ID : " + cycleRet.id);
+	    output.writeCycle("Cycle of period " + cycleRet.getPeriod());
+	    output.writeCycle("Time span : " + cycleRet.getStart() + " to " +
+			      cycleRet.getEnd());
+	    output.writeCycle("Repeated " +
 			      (cycleRet.getEnd() - cycleRet.getStart()) / cycleRet.getPeriod()
 			      + " times");
-			    
-	    output.writeCycle("Cycle: " + Arrays.toString(cycleRet.getCycle()));
+	    output.writeCycle("Values: " + Arrays.toString(cycleRet.getCycle()));
 	    output.writeCycle("");
 	}
 
 	// If there was an ongoing cycle, prints it
 	if(currentCycle != null) {
-	    output.writeCycle("Cycle of period " + currentCycle.getPeriod() + " from " +
-			      currentCycle.getStart() + " to " + (currentTime - 1) + " repeated " +
+	    output.writeCycle("Cycle Ended");
+	    output.writeCycle("Cycle ID : " + currentCycle.id);
+	    output.writeCycle("Cycle of period " + currentCycle.getPeriod());
+	    output.writeCycle("Time span : " + currentCycle.getStart() + " to " +
+			      (currentTime - 1));
+	    output.writeCycle("Repeated " +
 			      ((currentTime - 1) - currentCycle.getStart()) / currentCycle.getPeriod()
 			      + " times");
 			    
-	    output.writeCycle("Cycle: " + Arrays.toString(currentCycle.getCycle()));
+	    output.writeCycle("Values: " + Arrays.toString(currentCycle.getCycle()));
 	}
     }
     
